@@ -63,10 +63,9 @@ public class CustomLootTable {
         CustomLootTable table = new CustomLootTable(name);
 
         // 读取背包的前27格（索引 0-26）
-        net.minecraft.world.inventory.Inventory inv = player.getInventory();
-
-        for (int i = 0; i < Math.min(27, inv.getContainerSize()); i++) {
-            ItemStack itemStack = inv.getItem(i);
+        // 玩家背包的前27格是主背包（inventory），不包括快捷栏
+        for (int i = 0; i < 27; i++) {
+            ItemStack itemStack = player.containerMenu.getSlot(i).getItem();
             if (!itemStack.isEmpty()) {
                 // 使用指定的权重，如果没有则使用默认权重1
                 long weight = weightMap.getOrDefault(i, 1L);
@@ -168,4 +167,3 @@ public class CustomLootTable {
         return sb.toString();
     }
 }
-
