@@ -1,4 +1,4 @@
-# OctServerGunfight 资源控制模块 - 完整使用指南
+# OctServerGunfight 資源控制系統 - 完整使用指南
 
 ## 📑 目錄
 
