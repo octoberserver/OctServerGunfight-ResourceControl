@@ -54,7 +54,7 @@
 ```bash
 # 1. 站在箱子上方
 # 2. 執行指令標記箱子
-/chest add my_chest minecraft:chests/simple_dungeon
+/chest add my_chest "minecraft:chests/simple_dungeon"
 
 # 3. 之後想要重新生成寶藏時
 /chest clear my_chest
@@ -67,7 +67,7 @@
 /chest group create weapons
 
 # 2. 站在箱子上，直接加入組
-/chest add arena_chest_1 custom:pvp_weapons weapons
+/chest add arena_chest_1 "custom:pvp_weapons" weapons
 
 # 3. 查看組內所有箱子
 /chest group members weapons
@@ -85,7 +85,7 @@
 /customloot create my_loot
 
 # 3. 創建箱子
-/chest add treasure_box minecraft:chests/simple_dungeon
+/chest add treasure_box "minecraft:chests/simple_dungeon"
 
 # 4. 應用自定義 Loot Table
 /customloot apply treasure_box my_loot
@@ -113,9 +113,9 @@
 
 **示例：**
 ```bash
-/chest add dungeon_chest minecraft:chests/simple_dungeon
-/chest add treasure_box custom:treasure/golden_chest weapons,rare_loot
-/chest add arena_chest_1 custom:pvp_weapons arena,weapons
+/chest add dungeon_chest "minecraft:chests/simple_dungeon"
+/chest add treasure_box "custom:treasure/golden_chest" weapons,rare_loot
+/chest add arena_chest_1 "custom:pvp_weapons" arena,weapons
 ```
 
 ---
@@ -202,7 +202,7 @@ Loot Table: minecraft:chests/simple_dungeon
 
 **示例：**
 ```bash
-/chest region arena minecraft:chests/simple_dungeon arena_group
+/chest region arena "minecraft:chests/simple_dungeon" arena_group
 ```
 
 **輸出示例：**
@@ -458,7 +458,7 @@ Loot Table: minecraft:chests/simple_dungeon
 **例子：**
 ```bash
 # 先建立一個箱子
-/chest add boss_loot minecraft:chests/simple_dungeon
+/chest add boss_loot "minecraft:chests/simple_dungeon"
 
 # 然後應用自定義 Loot Table
 /customloot apply boss_loot treasure
@@ -560,7 +560,7 @@ Loot Table: minecraft:chests/simple_dungeon
 /customloot create starter_loot
 
 # 3. 創建箱子
-/chest add starter_chest minecraft:chests/simple_dungeon
+/chest add starter_chest "minecraft:chests/simple_dungeon"
 
 # 4. 應用 Loot Table
 /customloot apply starter_chest starter_loot
@@ -584,7 +584,7 @@ Loot Table: minecraft:chests/simple_dungeon
 /customloot create boss_treasure 100,50,50,10,2
 
 # 3. 設置箱子
-/chest add boss_room_chest minecraft:chests/end_city_treasure
+/chest add boss_room_chest "minecraft:chests/end_city_treasure"
 /customloot apply boss_room_chest boss_treasure
 
 # 4. 使用隨機種子多次重置測試
@@ -638,9 +638,9 @@ Loot Table: minecraft:chests/simple_dungeon
 
 2. 建造競技場並放置多個武器箱，站在箱子上執行：
    ```bash
-   /chest add arena_chest_1 custom:pvp_weapons arena,weapons
-   /chest add arena_chest_2 custom:pvp_weapons arena,weapons
-   /chest add arena_chest_3 custom:pvp_weapons arena,weapons
+   /chest add arena_chest_1 "custom:pvp_weapons" arena,weapons
+   /chest add arena_chest_2 "custom:pvp_weapons" arena,weapons
+   /chest add arena_chest_3 "custom:pvp_weapons" arena,weapons
    ```
 
 3. 每場比賽後重置所有競技場箱子：
@@ -676,26 +676,26 @@ Loot Table: minecraft:chests/simple_dungeon
 
 2. **紅隊設置（站在各箱子上）：**
    ```bash
-   /chest add red_w1 custom:pvp_weapons red_weapons,all_weapons
-   /chest add red_w2 custom:pvp_weapons red_weapons,all_weapons
-   /chest add red_w3 custom:pvp_weapons red_weapons,all_weapons
-   /chest add red_s1 minecraft:chests/simple_dungeon red_supplies,all_supplies
-   /chest add red_s2 minecraft:chests/simple_dungeon red_supplies,all_supplies
+   /chest add red_w1 "custom:pvp_weapons" red_weapons,all_weapons
+   /chest add red_w2 "custom:pvp_weapons" red_weapons,all_weapons
+   /chest add red_w3 "custom:pvp_weapons" red_weapons,all_weapons
+   /chest add red_s1 "minecraft:chests/simple_dungeon" red_supplies,all_supplies
+   /chest add red_s2 "minecraft:chests/simple_dungeon" red_supplies,all_supplies
    ```
 
 3. **藍隊設置：**
    ```bash
-   /chest add blue_w1 custom:pvp_weapons blue_weapons,all_weapons
-   /chest add blue_w2 custom:pvp_weapons blue_weapons,all_weapons
-   /chest add blue_w3 custom:pvp_weapons blue_weapons,all_weapons
-   /chest add blue_s1 minecraft:chests/simple_dungeon blue_supplies,all_supplies
-   /chest add blue_s2 minecraft:chests/simple_dungeon blue_supplies,all_supplies
+   /chest add blue_w1 "custom:pvp_weapons" blue_weapons,all_weapons
+   /chest add blue_w2 "custom:pvp_weapons" blue_weapons,all_weapons
+   /chest add blue_w3 "custom:pvp_weapons. blue_weapons,all_weapons
+   /chest add blue_s1 "minecraft:chests/simple_dungeon" blue_supplies,all_supplies
+   /chest add blue_s2 "minecraft:chests/simple_dungeon" blue_supplies,all_supplies
    ```
 
 4. **中立區設置：**
    ```bash
-   /chest add neutral_1 minecraft:chests/end_city_treasure neutral_rare
-   /chest add neutral_2 minecraft:chests/end_city_treasure neutral_rare
+   /chest add neutral_1 "minecraft:chests/end_city_treasure" neutral_rare
+   /chest add neutral_2 "minecraft:chests/end_city_treasure" neutral_rare
    ```
 
 5. **比賽流程：**
@@ -719,10 +719,10 @@ Loot Table: minecraft:chests/simple_dungeon
 
 ```bash
 # 快速標記箱子並加入組
-/chest add my_chest minecraft:chests/simple_dungeon weapons
+/chest add my_chest "minecraft:chests/simple_dungeon" weapons
 
 # 批量註冊區域內的箱子
-/chest region arena minecraft:chests/simple_dungeon arena_group
+/chest region arena "minecraft:chests/simple_dungeon" arena_group
 
 # 創建組並加入箱子
 /chest group create my_group
@@ -794,7 +794,7 @@ Loot Table: minecraft:chests/simple_dungeon
 # 2. 左鍵點擊區域第一角
 # 3. 右鍵點擊對角
 # 4. 執行命令（會自動生成名稱）
-/chest region arena minecraft:chests/simple_dungeon arena_pvp
+/chest region arena "minecraft:chests/simple_dungeon" arena_pvp
 ```
 
 ### 技巧 6：檢查箱子是否仍然存在
