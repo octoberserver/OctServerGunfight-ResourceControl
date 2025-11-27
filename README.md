@@ -687,7 +687,7 @@ Loot Table: minecraft:chests/simple_dungeon
    ```bash
    /chest add blue_w1 "custom:pvp_weapons" blue_weapons,all_weapons
    /chest add blue_w2 "custom:pvp_weapons" blue_weapons,all_weapons
-   /chest add blue_w3 "custom:pvp_weapons. blue_weapons,all_weapons
+   /chest add blue_w3 "custom:pvp_weapons" blue_weapons,all_weapons
    /chest add blue_s1 "minecraft:chests/simple_dungeon" blue_supplies,all_supplies
    /chest add blue_s2 "minecraft:chests/simple_dungeon" blue_supplies,all_supplies
    ```
