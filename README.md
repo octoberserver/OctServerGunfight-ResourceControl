@@ -255,8 +255,58 @@
 #### `/customloot list`
 列出所有自定義 Loot Table。
 
-#### `/customloot info <名稱>`
-查看 Loot Table 的詳細信息，包括物品、權重和格數設置。
+#### `/customloot info <名稱> [頁碼]` ⭐ **已增強**
+查看 Loot Table 的詳細信息（分頁顯示）。
+
+**新功能：**
+- ✅ 顯示每個物品的索引編號（從 1 開始）
+- ✅ 顯示每個物品的權重
+- ✅ **自動計算並顯示每個物品的掉落概率百分比**
+- ✅ 支援分頁顯示（每頁 10 個物品）
+- ✅ 根據稀有度用不同顏色標示（綠色=常見，紫色=超稀有）
+
+**例子：**
+```bash
+/customloot info my_loot        # 查看第 1 頁
+/customloot info my_loot 2      # 查看第 2 頁
+```
+
+**顯示格式：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  my_loot (頁 1/3)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+總共 25 種物品 | 總權重: 1000 | 填充: 3-5 格
+
+[  1] 鑽石劍 x1
+    └ 權重: 100 | 概率: 10.00%
+[  2] 鑽石 x64
+    └ 權重: 50 | 概率: 5.00%
+[  3] 金錠 x32
+    └ 權重: 200 | 概率: 20.00%
+...
+```
+
+#### `/customloot view <名稱>` ⭐ **新增**
+查看詳細格式的 Loot Table（可交互、可點擊）。
+
+**新功能：**
+- ✅ 更美觀的顯示格式
+- ✅ 將鼠標懸停在物品上可查看完整詳情
+- ✅ 點擊物品可複製索引號到聊天框
+- ✅ 完整顯示所有物品（無分頁）
+
+**適用場景：** 當你需要編輯 Loot Table 時使用此指令，可以輕鬆複製索引號進行編輯。
+
+**例子：**
+```bash
+/customloot view my_loot
+```
+
+**顯示效果：**
+- 可以點擊物品名稱來複製索引號
+- 懸停顯示完整的物品信息（索引、名稱、數量、權重、概率）
+- 根據掉落概率用顏色標示稀有度
 
 #### `/customloot delete <名稱>`
 刪除自定義 Loot Table。
@@ -292,19 +342,33 @@
 
 假設你有這樣的配置：
 
-| 物品 | 權重 |
-|------|------|
-| 鑽石 | 10 |
-| 金錠 | 5 |
-| 翠玉 | 3 |
-| 鐵錠 | 2 |
+| 物品 | 權重 | 概率（自動計算） |
+|------|------|------------------|
+| 鑽石 | 10 | 10/20 = 50% |
+| 金錠 | 5 | 5/20 = 25% |
+| 翠玉 | 3 | 3/20 = 15% |
+| 鐵錠 | 2 | 2/20 = 10% |
 
 **計算結果：**
 - 總權重 = 10 + 5 + 3 + 2 = 20
-- 鑽石掉落概率 = 10/20 = 50%
-- 金錠掉落概率 = 5/20 = 25%
-- 翠玉掉落概率 = 3/20 = 15%
-- 鐵錠掉落概率 = 2/20 = 10%
+- 鑽石掉落概率 = 10/20 = 50% §a(常見 - 綠色)
+- 金錠掉落概率 = 5/20 = 25% §e(普通 - 黃色)
+- 翠玉掉落概率 = 3/20 = 15% §6(稀有 - 金色)
+- 鐵錠掉落概率 = 2/20 = 10% §c(非常稀有 - 紅色)
+
+**💡 提示：** 使用 `/customloot info` 或 `/customloot view` 指令可以自動計算並顯示所有物品的概率！
+
+### 稀有度顏色標示
+
+系統會根據掉落概率自動用不同顏色標示物品：
+
+| 概率範圍 | 顏色 | 稀有度 |
+|---------|------|--------|
+| ≥ 30% | §a綠色 | 常見 |
+| 15% - 30% | §e黃色 | 普通 |
+| 5% - 15% | §6金色 | 稀有 |
+| 1% - 5% | §c紅色 | 非常稀有 |
+| < 1% | §5紫色 | 超稀有 |
 
 ### 權重設置建議
 
@@ -314,182 +378,4 @@
 | 稀有 | 5-20 | 低概率 |
 | 普通 | 50-100 | 中等概率 |
 | 常見 | 200+ | 高概率 |
-
----
-
-# 第三部分：實踐應用
-
-## 使用場景
-
-### 場景 1：PvP 競技場
-
-**目標：** 設置公平的 PvP 競技場，所有參賽者初始裝備相同。
-
-```bash
-# 1. 創建組
-/chest group create arena_weapons
-
-# 2. 準備背包（PvP 裝備）
-# - 鑽石劍 (權重 100)
-# - 鑽石胸甲 (權重 50)
-# - 鑽石褲 (權重 50)
-# - 鑽石靴 (權重 50)
-# - 鑽石頭盔 (權重 50)
-
-# 3. 創建 Loot Table
-/customloot create pvp_gear 100,50,50,50,50
-
-# 4. 設置為固定 3 格
-/customloot slots pvp_gear 3 3
-
-# 5. 批量標記箱子
-/chest region arena "minecraft:chests/simple_dungeon" arena_weapons
-
-# 6. 應用 Loot Table
-/customloot apply arena_chest_1 pvp_gear
-/customloot apply arena_chest_2 pvp_gear
-
-# 7. 比賽開始，重置所有箱子
-/chest group clear arena_weapons
-```
-
-### 場景 2：地牢寶藏
-
-**目標：** 創建隨機但平衡的地牢寶藏系統。
-
-```bash
-# 1. 準備背包
-# - 鑽石 (權重 50)
-# - 綠寶石 (權重 30)
-# - 金錠 x64 (權重 100)
-# - 鐵錠 x64 (權重 100)
-# - 木板 x64 (權重 200)
-
-# 2. 創建 Loot Table
-/customloot create dungeon_treasure 50,30,100,100,200
-
-# 3. 設置格數（5-12 格）
-/customloot slots dungeon_treasure 5 12
-
-# 4. 標記箱子
-/chest group create dungeon
-/chest add chest_1 "minecraft:chests/simple_dungeon" dungeon
-/chest add chest_2 "minecraft:chests/simple_dungeon" dungeon
-
-# 5. 應用 Loot Table
-/customloot apply chest_1 dungeon_treasure
-/customloot apply chest_2 dungeon_treasure
-
-# 6. 首次填充
-/chest group clear dungeon
-```
-
-### 場景 3：活動獎勵箱
-
-**目標：** 設置不同難度的獎勵箱。
-
-```bash
-# 1. 創建多個 Loot Table
-/customloot create reward_easy
-/customloot create reward_normal
-/customloot create reward_hard
-
-# 2. 設置格數
-/customloot slots reward_easy 5 10
-/customloot slots reward_normal 3 8
-/customloot slots reward_hard 2 5
-
-# 3. 應用到箱子
-/customloot apply reward_easy_box reward_easy
-/customloot apply reward_normal_box reward_normal
-/customloot apply reward_hard_box reward_hard
-
-# 4. 填充
-/chest clear reward_easy_box
-/chest clear reward_normal_box
-/chest clear reward_hard_box
-```
-
----
-
-## 進階技巧
-
-### 技巧 1：使用隨機種子控制戰利品
-
-```bash
-# 不提供 seed - 每次都隨機生成不同的戰利品（推薦）
-/chest clear my_chest
-
-# 提供 seed - 可重現相同的戰利品
-/chest clear my_chest 12345
-/chest clear my_chest 12345  # 完全相同的寶藏
-
-# 組清空 - 不提供 seed 時每個箱子都不同
-/chest group clear arena      # 每個箱子隨機
-/chest group clear arena 999  # 所有箱子相同
-```
-
-### 技巧 2：快速設置流程
-
-```bash
-# 3 步完成整個流程
-/customloot create my_loot
-/customloot apply my_chest my_loot
-/chest clear my_chest
-```
-
-### 技巧 3：為不同難度創建多套 Loot Table
-
-```bash
-/customloot create diff_easy
-/customloot slots diff_easy 8 15
-
-/customloot create diff_normal
-/customloot slots diff_normal 5 10
-
-/customloot create diff_hard
-/customloot slots diff_hard 2 5
-```
-
-### 技巧 4：創建超大獎池（無限物品）⭐ **新增**
-
-```bash
-# 方法 1：從空表開始逐步添加
-/customloot new super_rare
-/customloot additem super_rare 100   # 手持物品1
-/customloot additem super_rare 80    # 手持物品2
-# ... 重複添加任意數量的物品
-
-# 方法 2：批量導入 + 繼續添加
-/customloot new mixed_pool
-/customloot import mixed_pool        # 導入當前背包27格
-# 換一批物品到背包
-/customloot import mixed_pool        # 再次導入，累加物品
-# 可以重複多次
-
-# 方法 3：組合使用
-/customloot new ultimate_pool
-/customloot import ultimate_pool 100,50,30  # 批量導入
-/customloot additem ultimate_pool 500       # 額外添加稀有物品
-/customloot additem ultimate_pool 1000      # 添加超稀有物品
-```
-
-### 技巧 5：動態調整 Loot Table
-
-```bash
-# 查看當前配置
-/customloot info my_loot
-
-# 調整權重
-/customloot setweight my_loot 3 200   # 提高某物品掉率
-
-# 移除不需要的物品
-/customloot removeitem my_loot 7
-
-# 添加新物品
-/customloot additem my_loot 150
-
-# 重新應用到箱子即可生效
-/chest clear my_chest
-```
 

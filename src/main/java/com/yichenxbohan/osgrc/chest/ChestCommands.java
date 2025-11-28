@@ -135,23 +135,22 @@ public class ChestCommands {
             .then(Commands.literal("info")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .executes(ctx -> infoCustomLootTable(ctx.getSource(),
-                        StringArgumentType.getString(ctx, "name"))))));
+                        StringArgumentType.getString(ctx, "name"), 1, false))
+                    .then(Commands.argument("page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+                        .executes(ctx -> infoCustomLootTable(ctx.getSource(),
+                            StringArgumentType.getString(ctx, "name"),
+                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "page"), false))))));
 
-        // /customloot delete <name> - 刪除自定義 Loot Table
+        // /customloot view <name> [page] - 查看詳細格式（可交互）
         dispatcher.register(Commands.literal("customloot")
-            .then(Commands.literal("delete")
+            .then(Commands.literal("view")
                 .then(Commands.argument("name", StringArgumentType.word())
-                    .executes(ctx -> deleteCustomLootTable(ctx.getSource(),
-                        StringArgumentType.getString(ctx, "name"))))));
-
-        // /customloot apply <chestName> <tableName> - 將自定義 Loot Table 應用到箱子
-        dispatcher.register(Commands.literal("customloot")
-            .then(Commands.literal("apply")
-                .then(Commands.argument("chestName", StringArgumentType.word())
-                    .then(Commands.argument("tableName", StringArgumentType.word())
-                        .executes(ctx -> applyCustomLootTable(ctx.getSource(),
-                            StringArgumentType.getString(ctx, "chestName"),
-                            StringArgumentType.getString(ctx, "tableName")))))));
+                    .executes(ctx -> infoCustomLootTable(ctx.getSource(),
+                        StringArgumentType.getString(ctx, "name"), 1, true))
+                    .then(Commands.argument("page", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+                        .executes(ctx -> infoCustomLootTable(ctx.getSource(),
+                            StringArgumentType.getString(ctx, "name"),
+                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "page"), true))))));
         // /customloot slots <name> <min> <max> - 設置 Loot Table 的最小和最大填充格數
         dispatcher.register(Commands.literal("customloot")
             .then(Commands.literal("slots")
@@ -768,7 +767,7 @@ public class ChestCommands {
     /**
      * 查看自定義 Loot Table 詳情
      */
-    private static int infoCustomLootTable(CommandSourceStack source, String name) {
+    private static int infoCustomLootTable(CommandSourceStack source, String name, int page, boolean detailed) {
         ServerLevel level = source.getLevel();
         CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
 
@@ -778,7 +777,21 @@ public class ChestCommands {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("§6" + table.toString()), false);
+        if (detailed) {
+            // 使用詳細的可交互格式
+            List<net.minecraft.network.chat.Component> components = table.toFormattedComponents();
+            for (net.minecraft.network.chat.Component comp : components) {
+                source.sendSuccess(() -> comp, false);
+            }
+        } else {
+            // 使用簡潔的分頁格式
+            int itemsPerPage = 10;
+            List<net.minecraft.network.chat.Component> components = table.toPagedComponents(page, itemsPerPage);
+            for (net.minecraft.network.chat.Component comp : components) {
+                source.sendSuccess(() -> comp, false);
+            }
+        }
+
         return Command.SINGLE_SUCCESS;
     }
 

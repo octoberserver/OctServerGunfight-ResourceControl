@@ -240,13 +240,178 @@ public class CustomLootTable {
         sb.append("§e[自定义 Loot Table] ").append(name).append("\n");
         sb.append("§6总权重: ").append(totalWeight).append("\n");
         sb.append("§6填充格數: ").append(minSlots).append(" - ").append(maxSlots).append("\n");
+        sb.append("§6物品数量: ").append(items.size()).append("\n");
+        sb.append("§7§m                                        §r\n");
+
         for (int i = 0; i < items.size(); i++) {
             LootItem item = items.get(i);
-            sb.append("§6  ").append(i + 1).append(". ");
-            sb.append(item.itemStack.getHoverName().getString());
+            double probability = totalWeight > 0 ? (item.weight * 100.0 / totalWeight) : 0;
+
+            sb.append("§6  [").append(i + 1).append("] ");
+            sb.append("§f").append(item.itemStack.getHoverName().getString());
             sb.append(" §7x").append(item.itemStack.getCount());
-            sb.append(" §8(权重: ").append(item.weight).append(")\n");
+            sb.append("\n");
+            sb.append("§8      权重: ").append(item.weight);
+            sb.append(" §8| 概率: §a").append(String.format("%.2f", probability)).append("%\n");
         }
+
         return sb.toString();
+    }
+
+    /**
+     * 獲取格式化的聊天組件列表（支援更豐富的顯示）
+     */
+    public java.util.List<net.minecraft.network.chat.Component> toFormattedComponents() {
+        java.util.List<net.minecraft.network.chat.Component> components = new java.util.ArrayList<>();
+
+        // 標題
+        components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+        components.add(Component.literal("§e§l  自定義 Loot Table: §f" + name));
+        components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+
+        // 基本信息
+        components.add(Component.literal(""));
+        components.add(Component.literal("§6► 基本信息"));
+        components.add(Component.literal("  §7物品數量: §f" + items.size() + " 種"));
+        components.add(Component.literal("  §7總權重: §f" + totalWeight));
+        components.add(Component.literal("  §7填充格數: §f" + minSlots + " §7至 §f" + maxSlots + " §7格"));
+
+        // 物品列表
+        components.add(Component.literal(""));
+        components.add(Component.literal("§6► 物品列表 §7(索引 | 物品 | 權重 | 概率)"));
+        components.add(Component.literal(""));
+
+        for (int i = 0; i < items.size(); i++) {
+            LootItem item = items.get(i);
+            double probability = totalWeight > 0 ? (item.weight * 100.0 / totalWeight) : 0;
+
+            // 使用不同顏色標示稀有度
+            String rarityColor = getRarityColor(probability);
+            String indexStr = String.format("§e[%3d]", i + 1);
+
+            net.minecraft.network.chat.MutableComponent line = Component.literal(indexStr + " ")
+                .append(Component.literal("§f" + item.itemStack.getHoverName().getString())
+                    .withStyle(style -> style.withHoverEvent(
+                        new net.minecraft.network.chat.HoverEvent(
+                            net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                            Component.literal("§7索引: §e" + (i + 1) + "\n" +
+                                            "§7物品: §f" + item.itemStack.getHoverName().getString() + "\n" +
+                                            "§7數量: §fx" + item.itemStack.getCount() + "\n" +
+                                            "§7權重: §f" + item.weight + "\n" +
+                                            "§7概率: " + rarityColor + String.format("%.2f%%", probability) + "\n" +
+                                            "§8\n" +
+                                            "§8點擊複製索引號")
+                        ))
+                    .withStyle(style -> style.withClickEvent(
+                        new net.minecraft.network.chat.ClickEvent(
+                            net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND,
+                            String.valueOf(i + 1)
+                        ))
+                    ))
+                .append(Component.literal(" §7x" + item.itemStack.getCount()))
+                .append(Component.literal("\n    §8└ 權重: §f" + item.weight + " §8| 概率: " + rarityColor + String.format("%.2f%%", probability)));
+
+            components.add(line);
+        }
+
+        components.add(Component.literal(""));
+        components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+        components.add(Component.literal("§7提示: 將鼠標懸停在物品上查看詳情，點擊可複製索引號"));
+
+        return components;
+    }
+
+    /**
+     * 根據概率返回對應的顏色代碼
+     */
+    private String getRarityColor(double probability) {
+        if (probability >= 30.0) return "§a";      // 綠色 - 常見
+        if (probability >= 15.0) return "§e";      // 黃色 - 普通
+        if (probability >= 5.0) return "§6";       // 金色 - 稀有
+        if (probability >= 1.0) return "§c";       // 紅色 - 非常稀有
+        return "§5";                               // 紫色 - 超稀有
+    }
+
+    /**
+     * 獲取分頁顯示的組件列表
+     */
+    public java.util.List<net.minecraft.network.chat.Component> toPagedComponents(int page, int itemsPerPage) {
+        java.util.List<net.minecraft.network.chat.Component> components = new java.util.ArrayList<>();
+
+        int totalPages = (int) Math.ceil((double) items.size() / itemsPerPage);
+        page = Math.max(1, Math.min(page, totalPages));
+
+        int startIndex = (page - 1) * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, items.size());
+
+        // 標題
+        components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+        components.add(Component.literal("§e§l  " + name + " §7(頁 " + page + "/" + totalPages + ")"));
+        components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+
+        // 基本信息
+        components.add(Component.literal("§7總共 §f" + items.size() + " §7種物品 | 總權重: §f" + totalWeight +
+                                       " §7| 填充: §f" + minSlots + "-" + maxSlots + " §7格"));
+        components.add(Component.literal(""));
+
+        // 當前頁的物品
+        for (int i = startIndex; i < endIndex; i++) {
+            LootItem item = items.get(i);
+            double probability = totalWeight > 0 ? (item.weight * 100.0 / totalWeight) : 0;
+            String rarityColor = getRarityColor(probability);
+
+            components.add(Component.literal(String.format("§e[%3d] §f%s §7x%d",
+                i + 1,
+                item.itemStack.getHoverName().getString(),
+                item.itemStack.getCount()))
+                .append(Component.literal("\n    §8└ 權重: §f" + item.weight + " §8| 概率: " +
+                                        rarityColor + String.format("%.2f%%", probability))));
+        }
+
+        // 分頁控制
+        if (totalPages > 1) {
+            components.add(Component.literal(""));
+            net.minecraft.network.chat.MutableComponent pageControl = Component.literal("");
+
+            if (page > 1) {
+                pageControl.append(Component.literal("§a[上一頁]")
+                    .withStyle(style -> style.withClickEvent(
+                        new net.minecraft.network.chat.ClickEvent(
+                            net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
+                            "/customloot info " + name + " " + (page - 1)
+                        ))
+                    .withHoverEvent(
+                        new net.minecraft.network.chat.HoverEvent(
+                            net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                            Component.literal("§7點擊查看上一頁")
+                        ))));
+            } else {
+                pageControl.append(Component.literal("§8[上一頁]"));
+            }
+
+            pageControl.append(Component.literal("  §7" + page + "/" + totalPages + "  "));
+
+            if (page < totalPages) {
+                pageControl.append(Component.literal("§a[下一頁]")
+                    .withStyle(style -> style.withClickEvent(
+                        new net.minecraft.network.chat.ClickEvent(
+                            net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
+                            "/customloot info " + name + " " + (page + 1)
+                        ))
+                    .withHoverEvent(
+                        new net.minecraft.network.chat.HoverEvent(
+                            net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                            Component.literal("§7點擊查看下一頁")
+                        ))));
+            } else {
+                pageControl.append(Component.literal("§8[下一頁]"));
+            }
+
+            components.add(pageControl);
+        }
+
+        components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+
+        return components;
     }
 }
