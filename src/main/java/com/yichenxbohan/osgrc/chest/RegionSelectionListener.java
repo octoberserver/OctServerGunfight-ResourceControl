@@ -78,7 +78,6 @@ public class RegionSelectionListener {
             (max.getY() - min.getY() + 1) + " x " +
             (max.getZ() - min.getZ() + 1)));
         player.sendSystemMessage(Component.literal("§e總方塊數: " + volume));
-        player.sendSystemMessage(Component.literal("§a使用 §6/chest region §a指令來批量註冊區域內的箱子"));
+        player.sendSystemMessage(Component.literal("§a使用 §6/chest region <Loot Table> <組名> §a指令來批量註冊區域內的箱子"));
     }
 }
-

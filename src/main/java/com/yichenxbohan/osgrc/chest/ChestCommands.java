@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.HashMap;
@@ -58,16 +59,14 @@ public class ChestCommands {
                 .then(Commands.argument("name", StringArgumentType.word())
                     .executes(ctx -> infoChest(ctx.getSource(), StringArgumentType.getString(ctx, "name"))))));
 
-        // /chest region <prefix> <lootTable> <group> - 批量註冊選取區域內的所有箱子
+        // /chest region <lootTable> <group> - 批量註冊選取區域內的所有箱子
         dispatcher.register(Commands.literal("chest")
             .then(Commands.literal("region")
-                .then(Commands.argument("prefix", StringArgumentType.word())
-                    .then(Commands.argument("lootTable", StringArgumentType.string())
-                        .then(Commands.argument("group", StringArgumentType.word())
-                            .executes(ctx -> registerRegionChests(ctx.getSource(),
-                                StringArgumentType.getString(ctx, "prefix"),
-                                StringArgumentType.getString(ctx, "lootTable"),
-                                StringArgumentType.getString(ctx, "group"))))))));
+                .then(Commands.argument("lootTable", StringArgumentType.string())
+                    .then(Commands.argument("group", StringArgumentType.word())
+                        .executes(ctx -> registerRegionChests(ctx.getSource(),
+                            StringArgumentType.getString(ctx, "lootTable"),
+                            StringArgumentType.getString(ctx, "group")))))));
 
         // ---------- 新增：group 子命令 ----------
         dispatcher.register(Commands.literal("chest")
@@ -101,7 +100,7 @@ public class ChestCommands {
                 .then(Commands.literal("clear")
                     .then(Commands.argument("group", StringArgumentType.word())
                         .executes(ctx -> groupClear(ctx.getSource(),
-                            StringArgumentType.getString(ctx, "group"), 0L))
+                            StringArgumentType.getString(ctx, "group"), null))
                         .then(Commands.argument("seed", com.mojang.brigadier.arguments.LongArgumentType.longArg())
                             .executes(ctx -> groupClear(ctx.getSource(),
                                 StringArgumentType.getString(ctx, "group"),
@@ -153,6 +152,72 @@ public class ChestCommands {
                         .executes(ctx -> applyCustomLootTable(ctx.getSource(),
                             StringArgumentType.getString(ctx, "chestName"),
                             StringArgumentType.getString(ctx, "tableName")))))));
+        // /customloot slots <name> <min> <max> - 設置 Loot Table 的最小和最大填充格數
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("slots")
+                .then(Commands.argument("name", StringArgumentType.word())
+                    .then(Commands.argument("min", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 27))
+                        .then(Commands.argument("max", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 27))
+                            .executes(ctx -> setCustomLootTableSlots(ctx.getSource(),
+                                StringArgumentType.getString(ctx, "name"),
+                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "min"),
+                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "max"))))))));
+
+        // ---------- 新增：Loot Table 編輯指令（支援無限物品）----------
+
+        // /customloot new <name> - 創建空的 Loot Table
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("new")
+                .then(Commands.argument("name", StringArgumentType.word())
+                    .executes(ctx -> createEmptyLootTable(ctx.getSource(),
+                        StringArgumentType.getString(ctx, "name"))))));
+
+        // /customloot additem <tableName> <weight> - 添加手持物品到 Loot Table
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("additem")
+                .then(Commands.argument("tableName", StringArgumentType.word())
+                    .then(Commands.argument("weight", com.mojang.brigadier.arguments.LongArgumentType.longArg(1))
+                        .executes(ctx -> addItemToLootTable(ctx.getSource(),
+                            StringArgumentType.getString(ctx, "tableName"),
+                            com.mojang.brigadier.arguments.LongArgumentType.getLong(ctx, "weight")))))));
+
+        // /customloot import <tableName> [weights] - 批量導入背包物品
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("import")
+                .then(Commands.argument("tableName", StringArgumentType.word())
+                    .executes(ctx -> importInventoryToLootTable(ctx.getSource(),
+                        StringArgumentType.getString(ctx, "tableName"), null))
+                    .then(Commands.argument("weights", StringArgumentType.greedyString())
+                        .executes(ctx -> importInventoryToLootTable(ctx.getSource(),
+                            StringArgumentType.getString(ctx, "tableName"),
+                            StringArgumentType.getString(ctx, "weights")))))));
+
+        // /customloot removeitem <tableName> <index> - 移除物品
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("removeitem")
+                .then(Commands.argument("tableName", StringArgumentType.word())
+                    .then(Commands.argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+                        .executes(ctx -> removeItemFromLootTable(ctx.getSource(),
+                            StringArgumentType.getString(ctx, "tableName"),
+                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "index")))))));
+
+        // /customloot clear <tableName> - 清空 Loot Table 的所有物品
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("clear")
+                .then(Commands.argument("tableName", StringArgumentType.word())
+                    .executes(ctx -> clearLootTableItems(ctx.getSource(),
+                        StringArgumentType.getString(ctx, "tableName"))))));
+
+        // /customloot setweight <tableName> <index> <newWeight> - 修改物品權重
+        dispatcher.register(Commands.literal("customloot")
+            .then(Commands.literal("setweight")
+                .then(Commands.argument("tableName", StringArgumentType.word())
+                    .then(Commands.argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+                        .then(Commands.argument("newWeight", com.mojang.brigadier.arguments.LongArgumentType.longArg(1))
+                            .executes(ctx -> updateItemWeight(ctx.getSource(),
+                                StringArgumentType.getString(ctx, "tableName"),
+                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "index"),
+                                com.mojang.brigadier.arguments.LongArgumentType.getLong(ctx, "newWeight"))))))));
     }
 
     /**
@@ -316,7 +381,7 @@ public class ChestCommands {
     /**
      * 批量註冊選取區域內的所有箱子
      */
-    private static int registerRegionChests(CommandSourceStack source, String prefix, String lootTable, String group) {
+    private static int registerRegionChests(CommandSourceStack source, String lootTable, String group) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
             source.sendFailure(Component.literal("§c只有玩家可以執行此命令"));
             return 0;
@@ -345,7 +410,7 @@ public class ChestCommands {
                     // 檢查該位置是否為箱子
                     if (level.getBlockState(pos).getBlock() == Blocks.CHEST) {
                         // 生成唯一名稱
-                        String chestName = prefix + "_" + chestIndex;
+                        String chestName = "region_chest_" + chestIndex;
 
                         // 嘗試新增箱子
                         if (manager.addChest(chestName, pos, lootTable)) {
@@ -362,7 +427,7 @@ public class ChestCommands {
         if (successCount > 0) {
             final int count = successCount;
             source.sendSuccess(() -> Component.literal("§a成功註冊 " + count + " 個箱子到組 \"" + group + "\""), true);
-            source.sendSuccess(() -> Component.literal("§e前綴: " + prefix + ", Loot Table: " + lootTable), false);
+            source.sendSuccess(() -> Component.literal("§eLoot Table: " + lootTable), false);
 
             // 清除選取
             RegionSelector.clearSelection(player);
@@ -484,7 +549,7 @@ public class ChestCommands {
     /**
      * 清空組內所有箱子並重新套用 Loot Table
      */
-    private static int groupClear(CommandSourceStack source, String groupName, long seed) {
+    private static int groupClear(CommandSourceStack source, String groupName, Long seed) {
         ServerLevel level = source.getLevel();
         ChestManager manager = ChestManagerHolder.getManager(level);
 
@@ -773,5 +838,214 @@ public class ChestCommands {
         source.sendSuccess(() -> Component.literal("§a已將自定義 Loot Table \"" + tableName +
                 "\" 應用到箱子 \"" + chestName + "\""), true);
         return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * 設置自定義 Loot Table 的最小和最大填充格數
+     * /customloot slots <name> <min> <max>
+     */
+    private static int setCustomLootTableSlots(CommandSourceStack source, String name, int minSlots, int maxSlots) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查 Loot Table 是否存在
+        if (!manager.hasLootTable(name)) {
+            source.sendFailure(Component.literal("§c找不到自定義 Loot Table \"" + name + "\""));
+            return 0;
+        }
+
+        // 設置格數
+        CustomLootTable table = manager.getCustomLootTable(name);
+        table.setMinSlots(minSlots);
+        table.setMaxSlots(maxSlots);
+
+        source.sendSuccess(() -> Component.literal("§a已設置 Loot Table \"" + name + "\" 的最小填充格數為 " + minSlots +
+                "，最大填充格數為 " + maxSlots), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * 創建空的自定義 Loot Table
+     * /customloot new <name>
+     */
+    private static int createEmptyLootTable(CommandSourceStack source, String name) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查是否已存在
+        if (manager.hasLootTable(name)) {
+            source.sendFailure(Component.literal("§c自定義 Loot Table \"" + name + "\" 已存在"));
+            return 0;
+        }
+
+        // 創建空的 Loot Table
+        CustomLootTable table = CustomLootTable.emptyTable(name);
+
+        // 保存
+        if (manager.createCustomLootTable(name, table)) {
+            source.sendSuccess(() -> Component.literal("§a已創建空的自定義 Loot Table \"" + name + "\""), true);
+            return Command.SINGLE_SUCCESS;
+        } else {
+            source.sendFailure(Component.literal("§c無法創建 Loot Table"));
+            return 0;
+        }
+    }
+
+    /**
+     * 添加手持物品到指定的 Loot Table
+     * /customloot additem <tableName> <weight>
+     */
+    private static int addItemToLootTable(CommandSourceStack source, String tableName, long weight) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查 Loot Table 是否存在
+        if (!manager.hasLootTable(tableName)) {
+            source.sendFailure(Component.literal("§c找不到自定義 Loot Table \"" + tableName + "\""));
+            return 0;
+        }
+
+        // 獲取手持物品
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§c只有玩家可以執行此命令"));
+            return 0;
+        }
+
+        // 添加物品
+        CustomLootTable table = manager.getCustomLootTable(tableName);
+        ItemStack heldItem = player.getMainHandItem();
+        if (heldItem.isEmpty()) {
+            source.sendFailure(Component.literal("§c請手持一個物品來添加到 Loot Table"));
+            return 0;
+        }
+
+        // 添加物品到 Loot Table
+        table.addItem(heldItem, weight);
+
+        source.sendSuccess(() -> Component.literal("§a已將手持物品添加到 Loot Table \"" + tableName + "\"，權重: " + weight), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * 批量導入背包物品到指定的 Loot Table
+     * /customloot import <tableName> [weights]
+     */
+    private static int importInventoryToLootTable(CommandSourceStack source, String tableName, String weightsStr) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查 Loot Table 是否存在
+        if (!manager.hasLootTable(tableName)) {
+            source.sendFailure(Component.literal("§c找不到自定義 Loot Table \"" + tableName + "\""));
+            return 0;
+        }
+
+        // 獲取背包物品
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
+            source.sendFailure(Component.literal("§c只有玩家可以執行此命令"));
+            return 0;
+        }
+
+        // 解析權重
+        Map<Integer, Long> weightMap = new HashMap<>();
+        if (weightsStr != null && !weightsStr.isEmpty() && !weightsStr.equals("1")) {
+            try {
+                String[] weights = weightsStr.split(",");
+                for (int i = 0; i < weights.length && i < 27; i++) {
+                    long weight = Long.parseLong(weights[i].trim());
+                    if (weight > 0) {
+                        weightMap.put(i, weight);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                source.sendFailure(Component.literal("§c權重格式錯誤！請使用逗號分隔的數字"));
+                return 0;
+            }
+        }
+
+        // 將背包物品添加到 Loot Table
+        CustomLootTable table = manager.getCustomLootTable(tableName);
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (!stack.isEmpty()) {
+                long weight = weightMap.getOrDefault(i, 1L); // 默認權重為 1
+                table.addItem(stack, weight);
+            }
+        }
+
+        source.sendSuccess(() -> Component.literal("§a已將背包物品導入到 Loot Table \"" + tableName + "\""), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * 移除指定 Loot Table 中的物品
+     * /customloot removeitem <tableName> <index>
+     */
+    private static int removeItemFromLootTable(CommandSourceStack source, String tableName, int index) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查 Loot Table 是否存在
+        if (!manager.hasLootTable(tableName)) {
+            source.sendFailure(Component.literal("§c找不到自定義 Loot Table \"" + tableName + "\""));
+            return 0;
+        }
+
+        // 移除物品
+        CustomLootTable table = manager.getCustomLootTable(tableName);
+        if (table.removeItem(index)) {
+            source.sendSuccess(() -> Component.literal("§a已從 Loot Table \"" + tableName + "\" 移除物品，索引: " + index), true);
+            return Command.SINGLE_SUCCESS;
+        } else {
+            source.sendFailure(Component.literal("§c無法移除物品，請檢查索引是否有效"));
+            return 0;
+        }
+    }
+
+    /**
+     * 清空指定 Loot Table 的所有物品
+     * /customloot clear <tableName>
+     */
+    private static int clearLootTableItems(CommandSourceStack source, String tableName) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查 Loot Table 是否存在
+        if (!manager.hasLootTable(tableName)) {
+            source.sendFailure(Component.literal("§c找不到自定義 Loot Table \"" + tableName + "\""));
+            return 0;
+        }
+
+        // 清空物品
+        CustomLootTable table = manager.getCustomLootTable(tableName);
+        table.clearItems();
+
+        source.sendSuccess(() -> Component.literal("§a已清空 Loot Table \"" + tableName + "\" 的所有物品"), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /**
+     * 修改指定 Loot Table 中物品的權重
+     * /customloot setweight <tableName> <index> <newWeight>
+     */
+    private static int updateItemWeight(CommandSourceStack source, String tableName, int index, long newWeight) {
+        ServerLevel level = source.getLevel();
+        CustomLootTableManager manager = ChestManagerHolder.getCustomLootManager(level);
+
+        // 檢查 Loot Table 是否存在
+        if (!manager.hasLootTable(tableName)) {
+            source.sendFailure(Component.literal("§c找不到自定義 Loot Table \"" + tableName + "\""));
+            return 0;
+        }
+
+        // 修改權重
+        CustomLootTable table = manager.getCustomLootTable(tableName);
+        if (table.updateItemWeight(index, newWeight)) {
+            source.sendSuccess(() -> Component.literal("§a已修改 Loot Table \"" + tableName + "\" 中物品的權重，索引: " + index + "，新權重: " + newWeight), true);
+            return Command.SINGLE_SUCCESS;
+        } else {
+            source.sendFailure(Component.literal("§c無法修改物品權重，請檢查索引是否有效"));
+            return 0;
+        }
     }
 }

@@ -14,6 +14,8 @@ public class CustomLootTable {
     private final String name;
     private final List<LootItem> items = new ArrayList<>();
     private long totalWeight = 0;
+    private int minSlots = 1;      // 最小填充格數，預設為1
+    private int maxSlots = 27;     // 最大填充格數，預設為27（滿格）
 
     public static class LootItem {
         public ItemStack itemStack;
@@ -43,6 +45,34 @@ public class CustomLootTable {
     }
 
     /**
+     * 設置最小填充格數
+     */
+    public void setMinSlots(int minSlots) {
+        this.minSlots = Math.max(1, minSlots);
+    }
+
+    /**
+     * 設置最大填充格數
+     */
+    public void setMaxSlots(int maxSlots) {
+        this.maxSlots = Math.min(27, Math.max(this.minSlots, maxSlots));
+    }
+
+    /**
+     * 獲取最小填充格數
+     */
+    public int getMinSlots() {
+        return minSlots;
+    }
+
+    /**
+     * 獲取最大填充格數
+     */
+    public int getMaxSlots() {
+        return maxSlots;
+    }
+
+    /**
      * 添加物品和权重
      */
     public void addItem(ItemStack itemStack, long weight) {
@@ -50,9 +80,57 @@ public class CustomLootTable {
         if (itemStack.isEmpty()) return;
 
         ItemStack copy = itemStack.copy();
-        copy.setCount(1); // 确保只保存单个物品的信息
+        // 保留物品的數量信息
         items.add(new LootItem(copy, weight));
         totalWeight += weight;
+    }
+
+    /**
+     * 移除指定索引的物品
+     */
+    public boolean removeItem(int index) {
+        if (index < 0 || index >= items.size()) {
+            return false;
+        }
+        LootItem removed = items.remove(index);
+        totalWeight -= removed.weight;
+        return true;
+    }
+
+    /**
+     * 清空所有物品
+     */
+    public void clearItems() {
+        items.clear();
+        totalWeight = 0;
+    }
+
+    /**
+     * 更新物品權重
+     */
+    public boolean updateItemWeight(int index, long newWeight) {
+        if (index < 0 || index >= items.size() || newWeight <= 0) {
+            return false;
+        }
+        LootItem item = items.get(index);
+        totalWeight -= item.weight;
+        item.weight = newWeight;
+        totalWeight += newWeight;
+        return true;
+    }
+
+    /**
+     * 獲取物品數量
+     */
+    public int getItemCount() {
+        return items.size();
+    }
+
+    /**
+     * 創建空的 Loot Table
+     */
+    public static CustomLootTable emptyTable(String name) {
+        return new CustomLootTable(name);
     }
 
     /**
@@ -126,6 +204,8 @@ public class CustomLootTable {
         CompoundTag tag = new CompoundTag();
         tag.putString("name", name);
         tag.putLong("totalWeight", totalWeight);
+        tag.putInt("minSlots", minSlots);
+        tag.putInt("maxSlots", maxSlots);
 
         ListTag itemList = new ListTag();
         for (LootItem item : items) {
@@ -142,6 +222,8 @@ public class CustomLootTable {
     public static CustomLootTable deserializeNBT(CompoundTag tag) {
         CustomLootTable table = new CustomLootTable(tag.getString("name"));
         table.totalWeight = tag.getLong("totalWeight");
+        table.minSlots = tag.getInt("minSlots");
+        table.maxSlots = tag.getInt("maxSlots");
 
         ListTag itemList = tag.getList("items", Tag.TAG_COMPOUND);
         for (int i = 0; i < itemList.size(); i++) {
@@ -157,6 +239,7 @@ public class CustomLootTable {
         StringBuilder sb = new StringBuilder();
         sb.append("§e[自定义 Loot Table] ").append(name).append("\n");
         sb.append("§6总权重: ").append(totalWeight).append("\n");
+        sb.append("§6填充格數: ").append(minSlots).append(" - ").append(maxSlots).append("\n");
         for (int i = 0; i < items.size(); i++) {
             LootItem item = items.get(i);
             sb.append("§6  ").append(i + 1).append(". ");

@@ -78,8 +78,11 @@ public class ChestManager {
 
     /**
      * 清空箱子內容並套用 loot table
+     * @param name 箱子名稱
+     * @param seed 隨機種子，如果為 null 則自動生成隨機種子
+     * @return 是否成功
      */
-    public boolean clearAndApplyLootTable(String name, long seed) {
+    public boolean clearAndApplyLootTable(String name, Long seed) {
         ChestData chestData = chests.get(name);
         if (chestData == null) {
             return false;
@@ -91,6 +94,9 @@ public class ChestManager {
         if (level.getBlockState(pos).getBlock() != Blocks.CHEST) {
             return false;
         }
+
+        // 如果 seed 為 null，生成隨機 seed
+        long actualSeed = (seed != null) ? seed : System.currentTimeMillis() + pos.hashCode();
 
         try {
             net.minecraft.world.level.block.entity.BlockEntity blockEntity = level.getBlockEntity(pos);
@@ -108,14 +114,40 @@ public class ChestManager {
                     CustomLootTable customTable = customManager.getCustomLootTable(customTableName);
 
                     if (customTable != null) {
-                        // 從自定義 Loot Table 中隨機選擇物品填充箱子
-                        java.util.Random random = new java.util.Random(seed);
-                        for (int i = 0; i < chest.getContainerSize(); i++) {
+                        // 根據最小和最大格數設置，決定要填充多少格
+                        java.util.Random random = new java.util.Random(actualSeed);
+                        int minSlots = customTable.getMinSlots();
+                        int maxSlots = customTable.getMaxSlots();
+                        int containerSize = chest.getContainerSize();
+
+                        // 計算實際要填充的格數
+                        int actualMaxSlots = Math.min(maxSlots, containerSize);
+                        int actualMinSlots = Math.min(minSlots, actualMaxSlots);
+
+                        // 隨機決定填充多少格
+                        int slotsToFill;
+                        if (actualMinSlots == actualMaxSlots) {
+                            slotsToFill = actualMinSlots;
+                        } else {
+                            slotsToFill = actualMinSlots + random.nextInt(actualMaxSlots - actualMinSlots + 1);
+                        }
+
+                        // 創建可用格位的列表並打亂
+                        List<Integer> availableSlots = new ArrayList<>();
+                        for (int i = 0; i < containerSize; i++) {
+                            availableSlots.add(i);
+                        }
+                        Collections.shuffle(availableSlots, random);
+
+                        // 填充選定數量的格位
+                        for (int i = 0; i < slotsToFill && i < availableSlots.size(); i++) {
+                            int slotIndex = availableSlots.get(i);
                             net.minecraft.world.item.ItemStack item = customTable.getRandomItem(random);
                             if (!item.isEmpty()) {
-                                chest.setItem(i, item);
+                                chest.setItem(slotIndex, item);
                             }
                         }
+
                         chest.setChanged();
                         return true;
                     }
@@ -124,7 +156,7 @@ public class ChestManager {
                     try {
                         net.minecraft.resources.ResourceLocation lootTableId =
                             net.minecraft.resources.ResourceLocation.parse(lootTableStr);
-                        chest.setLootTable(lootTableId, seed);
+                        chest.setLootTable(lootTableId, actualSeed);
                     } catch (Exception e) {
                         return false;
                     }
@@ -278,10 +310,10 @@ public class ChestManager {
     /**
      * 清空組內所有箱子並重新套用 Loot Table
      * @param groupName 組名稱
-     * @param seed 隨機種子
+     * @param seed 隨機種子，如果為 null 則每個箱子使用不同的隨機種子
      * @return 成功清空的箱子數量
      */
-    public int clearGroupChests(String groupName, long seed) {
+    public int clearGroupChests(String groupName, Long seed) {
         List<ChestData> groupChests = getChestsByGroup(groupName);
         if (groupChests.isEmpty()) {
             return 0;
@@ -367,3 +399,4 @@ public class ChestManager {
         return result;
     }
 }
+
