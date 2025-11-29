@@ -88,12 +88,15 @@ public class CustomLootTable {
 
     /**
      * 移除指定索引的物品
+     * @param index 用戶輸入的索引（從 1 開始）
      */
     public boolean removeItem(int index) {
-        if (index < 0 || index >= items.size()) {
+        // 將用戶輸入的索引（1-based）轉換為實際的列表索引（0-based）
+        int actualIndex = index - 1;
+        if (actualIndex < 0 || actualIndex >= items.size()) {
             return false;
         }
-        LootItem removed = items.remove(index);
+        LootItem removed = items.remove(actualIndex);
         totalWeight -= removed.weight;
         return true;
     }
@@ -108,12 +111,15 @@ public class CustomLootTable {
 
     /**
      * 更新物品權重
+     * @param index 用戶輸入的索引（從 1 開始）
      */
     public boolean updateItemWeight(int index, long newWeight) {
-        if (index < 0 || index >= items.size() || newWeight <= 0) {
+        // 將用戶輸入的索引（1-based）轉換為實際的列表索引（0-based）
+        int actualIndex = index - 1;
+        if (actualIndex < 0 || actualIndex >= items.size() || newWeight <= 0) {
             return false;
         }
-        LootItem item = items.get(index);
+        LootItem item = items.get(actualIndex);
         totalWeight -= item.weight;
         item.weight = newWeight;
         totalWeight += newWeight;

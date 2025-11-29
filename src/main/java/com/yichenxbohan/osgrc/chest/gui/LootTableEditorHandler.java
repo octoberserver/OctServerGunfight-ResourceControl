@@ -20,8 +20,8 @@ public class LootTableEditorHandler {
     public static void onContainerClick(PlayerContainerEvent.Close event) {
         // 當玩家關閉容器時的處理
         if (event.getEntity() instanceof ServerPlayer player) {
-            if (player.containerMenu.getClass().getName().contains("ChestMenu")) {
-                // 保存更改
+            // 只有關閉 LootTableEditorContainer 時才顯示提示
+            if (player.containerMenu instanceof LootTableEditorContainer) {
                 player.sendSystemMessage(Component.literal("§aLoot Table 已保存"));
             }
         }
