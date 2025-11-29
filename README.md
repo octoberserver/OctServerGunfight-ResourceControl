@@ -379,3 +379,679 @@
 | 普通 | 50-100 | 中等概率 |
 | 常見 | 200+ | 高概率 |
 
+---
+
+# 第三部分：實踐應用
+
+## 使用場景
+
+### 場景 1：PvP 競技場設置
+
+**需求：** 為 PvP 競技場設置武器箱和補給箱，每場比賽後自動重置。
+
+**步驟：**
+
+```bash
+# 1. 創建武器組
+/chest group create arena_weapons
+
+# 2. 創建補給組
+/chest group create arena_supplies
+
+# 3. 創建自定義武器 Loot Table
+/customloot new weapon_box
+# 手持鑽石劍添加
+/customloot additem weapon_box 100
+# 手持鐵劍添加
+/customloot additem weapon_box 200
+# 手持弓添加
+/customloot additem weapon_box 150
+
+# 4. 設置填充格數（武器箱只填充 2-3 格）
+/customloot slots weapon_box 2 3
+
+# 5. 批量註冊區域內的武器箱
+# 先用金斧頭選取競技場區域
+/chest region "minecraft:chests/simple_dungeon" arena_weapons
+
+# 6. 應用自定義 Loot Table 到所有武器箱
+/customloot apply region_chest_1 weapon_box
+/customloot apply region_chest_2 weapon_box
+# ... 對每個箱子執行
+
+# 7. 比賽結束後一鍵重置
+/chest group clear arena_weapons
+/chest group clear arena_supplies
+```
+
+---
+
+### 場景 2：RPG 地城系統
+
+**需求：** 創建不同難度的地城，每個地城有不同的戰利品配置。
+
+**步驟：**
+
+```bash
+# 1. 創建簡單地城組
+/chest group create dungeon_easy
+
+# 2. 創建困難地城組
+/chest group create dungeon_hard
+
+# 3. 創建簡單地城戰利品表
+/customloot new easy_loot
+# 添加常見物品（高權重）
+/customloot additem easy_loot 500  # 麵包
+/customloot additem easy_loot 300  # 鐵錠
+/customloot additem easy_loot 100  # 金錠
+
+# 4. 創建困難地城戰利品表
+/customloot new hard_loot
+# 添加稀有物品（低權重）
+/customloot additem hard_loot 50   # 鑽石
+/customloot additem hard_loot 20   # 附魔書
+/customloot additem hard_loot 10   # 下界之星
+
+# 5. 設置填充範圍
+/customloot slots easy_loot 5 10   # 簡單地城：5-10 格
+/customloot slots hard_loot 3 5    # 困難地城：3-5 格（少但精）
+
+# 6. 標記箱子
+/chest add easy_treasure_1 "minecraft:chests/simple_dungeon" dungeon_easy
+/chest add hard_treasure_1 "minecraft:chests/simple_dungeon" dungeon_hard
+
+# 7. 應用戰利品表
+/customloot apply easy_treasure_1 easy_loot
+/customloot apply hard_treasure_1 hard_loot
+
+# 8. 填充箱子
+/chest clear easy_treasure_1
+/chest clear hard_treasure_1
+```
+
+---
+
+### 場景 3：每日挑戰獎勵
+
+**需求：** 設置每日挑戰箱，使用固定 seed 確保公平性。
+
+**步驟：**
+
+```bash
+# 1. 創建每日挑戰組
+/chest group create daily_challenge
+
+# 2. 創建獎勵戰利品表
+/customloot new daily_reward
+# 添加各種獎勵
+/customloot additem daily_reward 100  # 經驗瓶
+/customloot additem daily_reward 80   # 鑽石
+/customloot additem daily_reward 50   # 附魔書
+
+# 3. 標記獎勵箱
+/chest add daily_box "minecraft:chests/simple_dungeon" daily_challenge
+
+# 4. 應用獎勵表
+/customloot apply daily_box daily_reward
+
+# 5. 每天使用相同的 seed（日期）重置
+# 例如：2025年11月29日 = seed 20251129
+/chest clear daily_box 20251129
+```
+
+---
+
+### 場景 4：隨機事件箱
+
+**需求：** 在遊戲世界中設置隨機事件箱，定期刷新隨機戰利品。
+
+**步驟：**
+
+```bash
+# 1. 創建事件箱組
+/chest group create random_events
+
+# 2. 創建多個不同的戰利品表
+/customloot new event_common
+/customloot new event_rare
+/customloot new event_legendary
+
+# 3. 配置不同稀有度的戰利品
+# 常見事件
+/customloot additem event_common 500  # 食物
+/customloot additem event_common 300  # 基礎材料
+
+# 稀有事件
+/customloot additem event_rare 100    # 附魔裝備
+/customloot additem event_rare 50     # 鑽石
+
+# 傳說事件
+/customloot additem event_legendary 20  # 下界之星
+/customloot additem event_legendary 10  # 鞘翅
+
+# 4. 批量註冊事件箱
+/chest region "minecraft:chests/simple_dungeon" random_events
+
+# 5. 隨機應用不同的戰利品表到不同箱子
+/customloot apply region_chest_1 event_common
+/customloot apply region_chest_2 event_rare
+/customloot apply region_chest_3 event_legendary
+
+# 6. 定期重置（不使用 seed 保持隨機性）
+/chest group clear random_events
+```
+
+---
+
+## 進階技巧
+
+### 技巧 1：組合使用原生和自定義 Loot Table
+
+**應用：** 在同一個區域混合使用 Minecraft 原生戰利品表和自定義戰利品表。
+
+```bash
+# 創建混合組
+/chest group create mixed_loot
+
+# 部分箱子使用原生表
+/chest add chest1 "minecraft:chests/simple_dungeon" mixed_loot
+
+# 部分箱子使用自定義表
+/chest add chest2 "minecraft:chests/simple_dungeon" mixed_loot
+/customloot apply chest2 my_custom_loot
+
+# 一鍵重置所有
+/chest group clear mixed_loot
+```
+
+---
+
+### 技巧 2：動態調整戰利品權重
+
+**應用：** 根據遊戲進程調整物品掉落概率。
+
+```bash
+# 查看當前配置
+/customloot info my_loot
+
+# 假設第 1 個物品（鑽石）太常見了
+# 降低其權重
+/customloot setweight my_loot 1 50
+
+# 假設第 3 個物品（附魔書）太稀有了
+# 提高其權重
+/customloot setweight my_loot 3 200
+
+# 查看調整後的概率
+/customloot view my_loot
+```
+
+---
+
+### 技巧 3：使用 seed 進行測試
+
+**應用：** 在設置戰利品表時，使用固定 seed 測試配置是否合理。
+
+```bash
+# 使用固定 seed 測試
+/chest clear test_chest 999
+
+# 如果不滿意，調整權重後再次測試（相同 seed 會得到相同結果）
+/customloot setweight my_loot 1 100
+/chest clear test_chest 999
+
+# 滿意後，使用隨機 seed 正式啟用
+/chest clear test_chest
+```
+
+---
+
+### 技巧 4：創建階層式戰利品系統
+
+**應用：** 創建多層次的戰利品系統（青銅、白銀、黃金、鑽石）。
+
+```bash
+# 創建四個等級的戰利品表
+/customloot new tier_bronze
+/customloot new tier_silver
+/customloot new tier_gold
+/customloot new tier_diamond
+
+# 配置青銅級（常見物品，大量格數）
+/customloot slots tier_bronze 10 15
+/customloot additem tier_bronze 500  # 麵包
+/customloot additem tier_bronze 300  # 木材
+
+# 配置白銀級（普通物品，中等格數）
+/customloot slots tier_silver 8 12
+/customloot additem tier_silver 200  # 鐵錠
+/customloot additem tier_silver 150  # 金錠
+
+# 配置黃金級（稀有物品，少量格數）
+/customloot slots tier_gold 5 8
+/customloot additem tier_gold 100   # 鑽石
+/customloot additem tier_gold 80    # 附魔書
+
+# 配置鑽石級（超稀有物品，極少格數）
+/customloot slots tier_diamond 2 4
+/customloot additem tier_diamond 50  # 下界之星
+/customloot additem tier_diamond 30  # 鞘翅
+
+# 創建對應的組
+/chest group create tier_bronze
+/chest group create tier_silver
+/chest group create tier_gold
+/chest group create tier_diamond
+```
+
+---
+
+### 技巧 5：批量管理大量箱子
+
+**應用：** 使用組和區域選擇功能高效管理大型地圖。
+
+```bash
+# 1. 用金斧頭選擇整個城市區域
+# 2. 批量註冊所有箱子
+/chest region "minecraft:chests/simple_dungeon" city_chests
+
+# 3. 查看註冊了多少個箱子
+/chest group members city_chests
+
+# 4. 如果需要，可以將箱子分配到不同的子組
+/chest group create city_north
+/chest group create city_south
+
+/chest group add region_chest_1 city_north
+/chest group add region_chest_2 city_north
+/chest group add region_chest_10 city_south
+# ...
+
+# 5. 分區域重置
+/chest group clear city_north
+/chest group clear city_south
+```
+
+---
+
+### 技巧 6：備份和還原戰利品配置
+
+**應用：** 雖然沒有直接的備份指令，但可以通過查看信息來記錄配置。
+
+```bash
+# 查看並記錄配置
+/customloot view my_important_loot
+
+# 記錄下所有物品的索引、權重、概率
+# 如果需要重建，按照記錄重新創建
+
+# 創建新表
+/customloot new my_important_loot_backup
+
+# 按照記錄添加物品
+/customloot additem my_important_loot_backup 100
+/customloot additem my_important_loot_backup 200
+# ...
+```
+
+---
+
+### 技巧 7：無限物品戰利品表
+
+**應用：** 利用新的 `additem` 和 `import` 指令突破 27 種物品限制。
+
+```bash
+# 創建空表
+/customloot new mega_loot
+
+# 第一批：從背包導入 27 種物品
+# （在背包放滿 27 格）
+/customloot import mega_loot
+
+# 第二批：清空背包，放入另外 27 種物品
+# （在背包放滿另外 27 格）
+/customloot import mega_loot
+
+# 第三批：手持逐個添加
+/customloot additem mega_loot 50
+/customloot additem mega_loot 100
+# ... 可以無限添加
+
+# 查看總共添加了多少種物品
+/customloot info mega_loot
+```
+
+---
+
+# 第四部分：參考資料
+
+## 常見 Loot Table ID
+
+### Minecraft 原生 Loot Table（箱子類）
+
+| Loot Table ID | 說明 | 常見位置 |
+|--------------|------|---------|
+| `minecraft:chests/simple_dungeon` | 簡單地牢箱 | 地牢 |
+| `minecraft:chests/abandoned_mineshaft` | 廢棄礦井箱 | 廢棄礦井 |
+| `minecraft:chests/desert_pyramid` | 沙漠神殿箱 | 沙漠神殿 |
+| `minecraft:chests/jungle_temple` | 叢林神廟箱 | 叢林神廟 |
+| `minecraft:chests/stronghold_corridor` | 要塞走廊箱 | 要塞 |
+| `minecraft:chests/stronghold_crossing` | 要塞交叉口箱 | 要塞 |
+| `minecraft:chests/stronghold_library` | 要塞圖書館箱 | 要塞圖書館 |
+| `minecraft:chests/igloo_chest` | 冰屋箱 | 冰屋 |
+| `minecraft:chests/woodland_mansion` | 林地府邸箱 | 林地府邸 |
+| `minecraft:chests/end_city_treasure` | 終界城寶藏箱 | 終界城 |
+| `minecraft:chests/nether_bridge` | 地獄要塞箱 | 地獄要塞 |
+| `minecraft:chests/bastion_treasure` | 堡壘遺跡寶藏箱 | 堡壘遺跡 |
+| `minecraft:chests/bastion_other` | 堡壘遺跡普通箱 | 堡壘遺跡 |
+| `minecraft:chests/village/village_weaponsmith` | 村莊武器匠箱 | 村莊 |
+| `minecraft:chests/village/village_toolsmith` | 村莊工具匠箱 | 村莊 |
+| `minecraft:chests/village/village_armorer` | 村莊盔甲匠箱 | 村莊 |
+| `minecraft:chests/shipwreck_treasure` | 沉船寶藏箱 | 沉船 |
+| `minecraft:chests/buried_treasure` | 埋藏寶藏箱 | 海洋 |
+| `minecraft:chests/underwater_ruin_small` | 小型水下廢墟箱 | 水下廢墟 |
+| `minecraft:chests/underwater_ruin_big` | 大型水下廢墟箱 | 水下廢墟 |
+| `minecraft:chests/pillager_outpost` | 掠奪者前哨站箱 | 掠奪者前哨站 |
+
+### 使用建議
+
+| 用途 | 推薦 Loot Table | 理由 |
+|------|----------------|------|
+| PvP 競技場武器箱 | 自定義 | 可精確控制武器類型和數量 |
+| 新手村補給箱 | `minecraft:chests/village/village_toolsmith` | 基礎工具和材料 |
+| 中級冒險箱 | `minecraft:chests/simple_dungeon` | 平衡的戰利品 |
+| 高級挑戰箱 | `minecraft:chests/end_city_treasure` | 高級戰利品 |
+| 隨機寶藏箱 | `minecraft:chests/buried_treasure` | 豐富的隨機寶藏 |
+
+---
+
+## 故障排除
+
+### 問題 1：箱子沒有被填充
+
+**症狀：** 執行 `/chest clear` 後箱子仍然是空的。
+
+**可能原因：**
+1. Loot Table ID 錯誤
+2. 箱子位置記錄不正確
+3. 自定義 Loot Table 為空
+
+**解決方法：**
+```bash
+# 檢查箱子信息
+/chest info <箱子名>
+
+# 檢查自定義 Loot Table 內容
+/customloot info <表名>
+
+# 確認箱子是否存在
+# 站在箱子上重新註冊
+/chest remove <箱子名>
+/chest add <箱子名> <正確的Loot Table>
+```
+
+---
+
+### 問題 2：權重設置後概率不正確
+
+**症狀：** 設置的權重似乎沒有生效。
+
+**可能原因：**
+1. 總權重計算錯誤
+2. 權重設置到錯誤的索引
+
+**解決方法：**
+```bash
+# 查看詳細信息確認概率
+/customloot view <表名>
+
+# 確認索引號（從 1 開始，不是 0）
+/customloot info <表名>
+
+# 重新設置正確的權重
+/customloot setweight <表名> <正確索引> <權重>
+```
+
+---
+
+### 問題 3：區域選擇失效
+
+**症狀：** 使用 `/chest region` 指令後沒有註冊任何箱子。
+
+**可能原因：**
+1. 沒有使用金斧頭選擇區域
+2. 選擇的區域內沒有箱子
+3. 區域太大
+
+**解決方法：**
+```bash
+# 確保手持金斧頭
+# 左鍵點擊第一個角落（會有提示訊息）
+# 右鍵點擊對角的另一個角落（會有提示訊息）
+# 確認區域已選擇後執行指令
+
+# 如果區域太大，分批選擇
+```
+
+---
+
+### 問題 4：組操作無效
+
+**症狀：** 執行 `/chest group clear` 後部分箱子沒有重置。
+
+**可能原因：**
+1. 箱子沒有正確加入組
+2. 箱子被移除或破壞
+
+**解決方法：**
+```bash
+# 查看組內成員
+/chest group members <組名>
+
+# 確認所有箱子都在列表中
+# 如果有遺漏，手動添加
+/chest group add <箱子名> <組名>
+
+# 檢查每個箱子是否存在
+/chest info <箱子名>
+```
+
+---
+
+### 問題 5：自定義 Loot Table 物品遺失
+
+**症狀：** 創建的自定義 Loot Table 中部分物品不見了。
+
+**可能原因：**
+1. 物品 NBT 數據損壞
+2. 伺服器重啟導致數據遺失
+
+**解決方法：**
+```bash
+# 查看當前內容
+/customloot info <表名>
+
+# 重新添加遺失的物品
+/customloot additem <表名> <權重>
+
+# 建議定期記錄配置
+/customloot view <表名>
+```
+
+---
+
+### 問題 6：填充格數不正確
+
+**症狀：** 箱子填充的物品數量與設置不符。
+
+**可能原因：**
+1. 沒有設置 slots 範圍
+2. Loot Table 物品種類太少
+
+**解決方法：**
+```bash
+# 查看 Loot Table 信息
+/customloot info <表名>
+
+# 設置合理的填充範圍
+/customloot slots <表名> <最小格數> <最大格數>
+
+# 確保物品種類足夠
+# 如果只有 3 種物品，無法填充 10 格不重複的物品
+```
+
+---
+
+## 技術細節
+
+### 數據存儲
+
+所有箱子和 Loot Table 數據都存儲在：
+```
+world/data/osgrc/
+├── chests.dat           # 箱子記錄
+├── groups.dat           # 組記錄
+└── custom_loots.dat     # 自定義 Loot Table
+```
+
+### NBT 數據結構
+
+#### 箱子數據
+```nbt
+{
+  name: "chest_name",
+  pos: {x: 100, y: 64, z: 200},
+  dimension: "minecraft:overworld",
+  lootTable: "minecraft:chests/simple_dungeon",
+  customLootTable: "my_custom_loot",
+  groups: ["group1", "group2"]
+}
+```
+
+#### 自定義 Loot Table 數據
+```nbt
+{
+  name: "my_loot",
+  totalWeight: 1000L,
+  minSlots: 5,
+  maxSlots: 10,
+  items: [
+    {
+      item: {id: "minecraft:diamond_sword", Count: 1b, ...},
+      weight: 100L
+    },
+    ...
+  ]
+}
+```
+
+### 權重計算算法
+
+```java
+// 隨機選擇物品的算法
+long roll = random.nextLong() % totalWeight;
+long current = 0;
+
+for (LootItem item : items) {
+    current += item.weight;
+    if (roll < current) {
+        return item.itemStack.copy();
+    }
+}
+```
+
+### 填充算法
+
+```java
+// 箱子填充算法
+int slotsToFill = random.nextInt(maxSlots - minSlots + 1) + minSlots;
+
+for (int i = 0; i < slotsToFill; i++) {
+    int randomSlot = random.nextInt(27);
+    ItemStack randomItem = lootTable.getRandomItem(random);
+    chest.setItem(randomSlot, randomItem);
+}
+```
+
+### 概率計算公式
+
+```
+單個物品掉落概率 = 物品權重 / 總權重 × 100%
+
+至少獲得一次該物品的概率（填充 n 格）:
+P(至少一次) = 1 - (1 - 單次概率)^n
+
+例如：
+- 物品權重 = 100
+- 總權重 = 1000
+- 單次概率 = 10%
+- 填充 5 格
+- 至少獲得一次 = 1 - (1 - 0.1)^5 = 1 - 0.59049 ≈ 40.95%
+```
+
+### 性能優化建議
+
+1. **避免過大的區域選擇**
+   - 一次最多註冊 100 個箱子
+   - 大範圍分批處理
+
+2. **合理設置權重**
+   - 使用整數權重
+   - 避免過大的權重值（建議 < 10000）
+
+3. **定期清理無效箱子**
+   - 檢查已破壞的箱子記錄
+   - 刪除不再使用的記錄
+
+4. **組織結構建議**
+   ```
+   總組
+   ├── 區域組（北區、南區）
+   │   ├── 類型組（武器箱、補給箱）
+   │   │   └── 個別箱子
+   ```
+
+---
+
+## 版本歷史
+
+### v1.0.0
+- ✅ 基本箱子管理功能
+- ✅ 組管理系統
+- ✅ 區域批量註冊
+- ✅ 自定義 Loot Table（27 種物品限制）
+
+### v1.1.0（當前版本）
+- ⭐ 新增無限物品支援
+- ⭐ 新增 `additem` 指令
+- ⭐ 新增 `import` 指令
+- ⭐ 新增 `removeitem` 指令
+- ⭐ 新增 `setweight` 指令
+- ⭐ 新增 `view` 指令（可交互顯示）
+- ⭐ 增強 `info` 指令（顯示索引和概率）
+- ⭐ 新增填充格數控制
+- ⭐ 新增稀有度顏色標示
+- ⭐ 新增分頁顯示支援
+
+---
+
+## 致謝
+
+感謝所有測試人員和貢獻者！
+
+---
+
+## 授權
+
+本專案採用 MIT 授權。
+
+---
+
+## 聯絡方式
+
+如有問題或建議，請聯繫開發團隊。
+
+---
+
+**祝你遊戲愉快！🎮**

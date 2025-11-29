@@ -76,6 +76,27 @@ public class CustomLootTableManager {
     }
 
     /**
+     * 獲取 Loot Table（別名方法，與 getCustomLootTable 相同）
+     */
+    public CustomLootTable getLootTable(String name) {
+        return lootTables.get(name);
+    }
+
+    /**
+     * 獲取所有 Loot Table 名稱（別名方法，與 listLootTableNames 相同）
+     */
+    public Set<String> getAllLootTableNames() {
+        return lootTables.keySet();
+    }
+
+    /**
+     * 保存所有 Loot Tables 到文件
+     */
+    public void saveLootTables() {
+        saveToFile();
+    }
+
+    /**
      * 保存到文件
      */
     private void saveToFile() {
@@ -136,4 +157,3 @@ public class CustomLootTableManager {
         saveToFile();
     }
 }
-

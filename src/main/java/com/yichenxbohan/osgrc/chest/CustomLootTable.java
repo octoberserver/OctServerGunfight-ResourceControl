@@ -3,6 +3,7 @@ package com.yichenxbohan.osgrc.chest;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
@@ -289,25 +290,28 @@ public class CustomLootTable {
             String rarityColor = getRarityColor(probability);
             String indexStr = String.format("§e[%3d]", i + 1);
 
+            // 使用 final 變量
+            final int finalIndex = i;
+
             net.minecraft.network.chat.MutableComponent line = Component.literal(indexStr + " ")
                 .append(Component.literal("§f" + item.itemStack.getHoverName().getString())
-                    .withStyle(style -> style.withHoverEvent(
-                        new net.minecraft.network.chat.HoverEvent(
-                            net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                            Component.literal("§7索引: §e" + (i + 1) + "\n" +
-                                            "§7物品: §f" + item.itemStack.getHoverName().getString() + "\n" +
-                                            "§7數量: §fx" + item.itemStack.getCount() + "\n" +
-                                            "§7權重: §f" + item.weight + "\n" +
-                                            "§7概率: " + rarityColor + String.format("%.2f%%", probability) + "\n" +
-                                            "§8\n" +
-                                            "§8點擊複製索引號")
-                        ))
-                    .withStyle(style -> style.withClickEvent(
-                        new net.minecraft.network.chat.ClickEvent(
-                            net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND,
-                            String.valueOf(i + 1)
-                        ))
-                    ))
+                    .withStyle(style -> style
+                        .withHoverEvent(
+                            new net.minecraft.network.chat.HoverEvent(
+                                net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                                Component.literal("§7索引: §e" + (finalIndex + 1) + "\n" +
+                                                "§7物品: §f" + item.itemStack.getHoverName().getString() + "\n" +
+                                                "§7數量: §fx" + item.itemStack.getCount() + "\n" +
+                                                "§7權重: §f" + item.weight + "\n" +
+                                                "§7概率: " + rarityColor + String.format("%.2f%%", probability) + "\n" +
+                                                "§8\n" +
+                                                "§8點擊複製索引號")
+                            ))
+                        .withClickEvent(
+                            new net.minecraft.network.chat.ClickEvent(
+                                net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND,
+                                String.valueOf(finalIndex + 1)
+                            ))))
                 .append(Component.literal(" §7x" + item.itemStack.getCount()))
                 .append(Component.literal("\n    §8└ 權重: §f" + item.weight + " §8| 概率: " + rarityColor + String.format("%.2f%%", probability)));
 
@@ -344,6 +348,10 @@ public class CustomLootTable {
         int startIndex = (page - 1) * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, items.size());
 
+        // 使用 final 變量
+        final int finalPage = page;
+        final String finalName = this.name;
+
         // 標題
         components.add(Component.literal("§e§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
         components.add(Component.literal("§e§l  " + name + " §7(頁 " + page + "/" + totalPages + ")"));
@@ -375,16 +383,17 @@ public class CustomLootTable {
 
             if (page > 1) {
                 pageControl.append(Component.literal("§a[上一頁]")
-                    .withStyle(style -> style.withClickEvent(
-                        new net.minecraft.network.chat.ClickEvent(
-                            net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
-                            "/customloot info " + name + " " + (page - 1)
-                        ))
-                    .withHoverEvent(
-                        new net.minecraft.network.chat.HoverEvent(
-                            net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                            Component.literal("§7點擊查看上一頁")
-                        ))));
+                    .withStyle(style -> style
+                        .withClickEvent(
+                            new net.minecraft.network.chat.ClickEvent(
+                                net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
+                                "/customloot info " + finalName + " " + (finalPage - 1)
+                            ))
+                        .withHoverEvent(
+                            new net.minecraft.network.chat.HoverEvent(
+                                net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                                Component.literal("§7點擊查看上一頁")
+                            ))));
             } else {
                 pageControl.append(Component.literal("§8[上一頁]"));
             }
@@ -393,16 +402,17 @@ public class CustomLootTable {
 
             if (page < totalPages) {
                 pageControl.append(Component.literal("§a[下一頁]")
-                    .withStyle(style -> style.withClickEvent(
-                        new net.minecraft.network.chat.ClickEvent(
-                            net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
-                            "/customloot info " + name + " " + (page + 1)
-                        ))
-                    .withHoverEvent(
-                        new net.minecraft.network.chat.HoverEvent(
-                            net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
-                            Component.literal("§7點擊查看下一頁")
-                        ))));
+                    .withStyle(style -> style
+                        .withClickEvent(
+                            new net.minecraft.network.chat.ClickEvent(
+                                net.minecraft.network.chat.ClickEvent.Action.RUN_COMMAND,
+                                "/customloot info " + finalName + " " + (finalPage + 1)
+                            ))
+                        .withHoverEvent(
+                            new net.minecraft.network.chat.HoverEvent(
+                                net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT,
+                                Component.literal("§7點擊查看下一頁")
+                            ))));
             } else {
                 pageControl.append(Component.literal("§8[下一頁]"));
             }
