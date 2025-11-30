@@ -31,6 +31,7 @@ public class ChestCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         // /chest add <name> <lootTable> [groups...]
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("add")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .then(Commands.argument("lootTable", StringArgumentType.string())
@@ -46,16 +47,19 @@ public class ChestCommands {
                                 StringArgumentType.getString(ctx, "groups"))))))));
         // /chest remove <name>
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("remove")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(CHEST_SUGGESTIONS)
                     .executes(ctx -> removeChest(ctx.getSource(), StringArgumentType.getString(ctx, "name"))))));
         // /chest list
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("list")
                 .executes(ctx -> listChests(ctx.getSource()))));
         // /chest clear <name> [seed]
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("clear")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(CHEST_SUGGESTIONS)
@@ -65,6 +69,7 @@ public class ChestCommands {
                                                      com.mojang.brigadier.arguments.LongArgumentType.getLong(ctx, "seed")))))));
         // /chest info <name>
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("info")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(CHEST_SUGGESTIONS)
@@ -72,6 +77,7 @@ public class ChestCommands {
 
         // /chest region <lootTable> <group> - 批量註冊選取區域內的所有箱子
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("region")
                 .then(Commands.argument("lootTable", StringArgumentType.string())
                     .then(Commands.argument("group", StringArgumentType.word())
@@ -82,6 +88,7 @@ public class ChestCommands {
 
         // ---------- 新增：group 子命令 ----------
         dispatcher.register(Commands.literal("chest")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("group")
                 // /chest group add <chestName> <group>
                 .then(Commands.literal("add")
@@ -137,6 +144,7 @@ public class ChestCommands {
 
         // ---------- 新增：自定義 Loot Table 指令 ----------
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("create")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .then(Commands.argument("weights", StringArgumentType.greedyString())
@@ -146,11 +154,13 @@ public class ChestCommands {
 
         // /customloot list - 列出所有自定義 Loot Table
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("list")
                 .executes(ctx -> listCustomLootTables(ctx.getSource()))));
 
         // /customloot info <name> - 查看自定義 Loot Table 詳情
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("info")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -163,6 +173,7 @@ public class ChestCommands {
 
         // /customloot view <name> [page] - 查看詳細格式（可交互）
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("view")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -174,6 +185,7 @@ public class ChestCommands {
                             com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "page"), true))))));
         // /customloot slots <name> <min> <max> - 設置 Loot Table 的最小和最大填充格數
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("slots")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -188,6 +200,7 @@ public class ChestCommands {
 
         // /customloot new <name> - 創建空的 Loot Table
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("new")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .executes(ctx -> createEmptyLootTable(ctx.getSource(),
@@ -195,6 +208,7 @@ public class ChestCommands {
 
         // /customloot additem <tableName> <weight> - 添加手持物品到 Loot Table
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("additem")
                 .then(Commands.argument("tableName", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -205,6 +219,7 @@ public class ChestCommands {
 
         // /customloot import <tableName> [weights] - 批量導入背包物品
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("import")
                 .then(Commands.argument("tableName", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -217,6 +232,7 @@ public class ChestCommands {
 
         // /customloot removeitem <tableName> <index> - 移除物品
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("removeitem")
                 .then(Commands.argument("tableName", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -227,6 +243,7 @@ public class ChestCommands {
 
         // /customloot clear <tableName> - 清空 Loot Table 的所有物品
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("clear")
                 .then(Commands.argument("tableName", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -235,6 +252,7 @@ public class ChestCommands {
 
         // /customloot setweight <tableName> <index> <newWeight> - 修改物品權重
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("setweight")
                 .then(Commands.argument("tableName", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -247,6 +265,7 @@ public class ChestCommands {
 
         // /customloot delete <name> - 刪除自定義 Loot Table
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("delete")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
@@ -255,6 +274,7 @@ public class ChestCommands {
 
         // /customloot apply <chestName> <tableName> - 將自定義 Loot Table 應用到箱子
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("apply")
                 .then(Commands.argument("chestName", StringArgumentType.word())
                     .suggests(CHEST_SUGGESTIONS)
@@ -266,11 +286,13 @@ public class ChestCommands {
 
         // /customloot gui - 打開 Loot Table 管理器 GUI
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("gui")
                 .executes(ctx -> openLootTableListGUI(ctx.getSource()))));
 
         // /customloot edit <name> - 打開編輯 Loot Table 的 GUI
         dispatcher.register(Commands.literal("customloot")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("edit")
                 .then(Commands.argument("name", StringArgumentType.word())
                     .suggests(LOOT_TABLE_SUGGESTIONS)
